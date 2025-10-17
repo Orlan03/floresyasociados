@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Nueva carpeta - Procesos{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="card">
+    <h2 style="margin-top:0;">Nueva carpeta</h2>
+    <form method="post" class="grid">
+      {% csrf_token %}
+      <div class="field"><label>Nombre</label>{{ form.nombre }}</div>
+      <div class="field"><label>Padre</label>{{ form.padre }}</div>
+      <div class="field"><label>Orden</label>{{ form.orden }}</div>
+      <button class="btn btn-primary" type="submit">Crear</button>
+      <a class="btn" style="border:1.5px solid #e8d08a;color:#e8d08a;" href="{% url 'procesos:arbol' %}">Volver</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ modo|title }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  .topbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+  .tabs{ display:flex; gap:8px; flex-wrap:wrap }
+  .pane{ padding:18px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
+  .folder{
+    padding:16px; border-radius:14px; border:1px solid var(--border); background:#fff;
+    display:flex; flex-direction:column; gap:10px; transition:.18s ease; position:relative; overflow:hidden;
+  }
+  .folder:hover{ transform:translateY(-2px); box-shadow:var(--shadow); }
+  .f-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .f-title{ display:flex; align-items:center; gap:10px; font-weight:800; color:var(--ink); text-decoration:none }
+  .f-title .icon{ width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:rgba(232,208,138,.18); color:#8a6e1e; }
+  .f-meta{ color:var(--muted); font-size:.92rem; display:flex; gap:10px; flex-wrap:wrap }
+  .f-actions{ display:flex; gap:8px; }
+  .empty{
+    text-align:center; color:var(--muted); padding:28px; border-radius:14px; border:1px dashed var(--border); background:#fff;
+  }
+</style>
+
+<div class="container">
+  <div class="topbar">
+    <div class="tabs">
+      <a class="btn{% if modo != 'documentos' %} primary{% endif %}" href="{% url 'procesos:lista' %}">
+        <i class="fa fa-briefcase"></i> Procesos
+      </a>
+      <a class="btn{% if modo == 'documentos' %} primary{% endif %}" href="{% url 'procesos:documentos_lista' %}">
+        <i class="fa fa-folder-tree"></i> Documentos
+      </a>
+    </div>
+    <div class="tabs">
+      <a id="btnNuevaCarpeta" class="btn primary" href="#"><i class="fa fa-folder-plus"></i> Nueva carpeta</a>
+      {% if modo == "documentos" %}
+      <a class="btn" href="{% url 'procesos:subir_documento' %}"><i class="fa fa-upload"></i> Subir documento</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card pane">
+    {% if raiz %}
+      <div class="grid">
+        {% for c in raiz %}
+        <div class="folder">
+          <div class="f-head">
+            <a class="f-title" href="{% url 'procesos:carpeta_detalle' c.id %}">
+              <span class="icon"><i class="fa fa-folder"></i></span>
+              <span>{{ c.nombre }}</span>
+            </a>
+            <div class="f-actions">
+              {% if modo == "documentos" %}
+                <button class="btn" data-action="subcarpeta" data-id="{{ c.id }}" title="Crear subcarpeta">
+                  <i class="fa fa-folder-plus"></i>
+                </button>
+              {% else %}
+                <a class="btn" href="{% url 'procesos:proceso_nuevo' c.id %}" title="Nuevo proceso">
+                  <i class="fa fa-plus"></i> Proceso
+                </a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="f-meta">
+            <span class="chip"><i class="fa fa-sitemap"></i> {{ c.cant_subs }} subcarpeta{{ c.cant_subs|pluralize }}</span>
+            {% if modo != "documentos" %}
+              <span class="chip"><i class="fa fa-list-check"></i> {{ c.cant_procesos }} proceso{{ c.cant_procesos|pluralize }}</span>
+            {% else %}
+              <span class="chip"><i class="fa fa-file"></i> {{ c.cant_procesos }} item{{ c.cant_procesos|pluralize }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">
+        <i class="fa fa-folder-open" style="font-size:38px;"></i><br>
+        No hay carpetas en esta sección.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal crear -->
+<div id="modal" class="card" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); place-items:center; z-index:40;">
+  <div class="card" style="width:min(460px,92%); padding:18px;">
+    <h3 style="margin-top:0;">Nueva carpeta</h3>
+    <form method="post" action="{% url 'procesos:crear_carpeta' %}">
+      {% csrf_token %}
+      <input type="hidden" name="seccion" value="{{ modo }}">
+      <input type="hidden" name="padre" id="padreId">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <input class="input" name="nombre" placeholder="Nombre de la carpeta..." required style="margin:10px 0;">
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn ghost" type="button" onclick="cerrar()">Cancelar</button>
+        <button class="btn primary" type="submit">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('modal');
+  const padre = document.getElementById('padreId');
+
+  document.getElementById('btnNuevaCarpeta').addEventListener('click', e=>{
+    e.preventDefault(); padre.value=''; abrir();
+  });
+
+  document.querySelectorAll('[data-action="subcarpeta"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.preventDefault(); padre.value=b.dataset.id; abrir();
+    });
+  });
+
+  function abrir(){ modal.style.display='grid'; }
+  function cerrar(){ modal.style.display='none'; }
+  modal.addEventListener('click', e=>{ if(e.target === modal) cerrar(); });
+</script>
+{% endblock %}

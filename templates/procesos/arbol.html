@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Listado de procesos{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{ --navy:#0b1220; --ink:#0f172a; --muted:#64748b; --card:#ffffff; --border:#e5e7eb; --gold:#e8d08a; --gold-2:#d9bd64; --surface:#f8fafc; --ring: rgba(124,58,237,.35); }
+  body{ background:var(--navy); }
+  .wrap{ max-width:1120px; margin:34px auto; padding:0 20px; }
+  .card{ background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 30px rgba(2,6,23,.07); }
+  .head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .title{ margin:0; color:var(--ink); font-size:22px; font-weight:800; }
+  .subtitle{ color:var(--muted); font-size:13px; margin-top:4px; }
+
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .search{ display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px 10px; }
+  .search input{ border:0; outline:none; background:transparent; min-width:220px; }
+  .select{ border:1px solid var(--border); background:#fff; border-radius:12px; padding:8px 10px; color:#111827; }
+  .btn-gold{ background:linear-gradient(90deg,var(--gold),var(--gold-2)); color:#111827; border:0; border-radius:12px; padding:10px 14px; font-weight:800; box-shadow:0 6px 18px rgba(232,208,138,.25); text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:14px; margin-top:14px; }
+  @media(min-width:600px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:900px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+  @media(min-width:1100px){ .grid{ grid-template-columns:repeat(4,1fr); } }
+
+  .folder{ border:1px solid var(--border); border-radius:14px; padding:14px; transition:.18s ease; background:#fff; position:relative; overflow:hidden; }
+  .folder:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(2,6,23,.08); }
+  .folder a.primary{ text-decoration:none; color:inherit; display:block; }
+  .icon{ width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:rgba(232,208,138,.18); color:#8a6e1e; margin-bottom:10px; }
+  .name{ font-weight:800; color:#0f172a; line-height:1.15; margin-bottom:6px; padding-right:110px; }
+  .meta{ color:#6b7280; font-size:12.5px; display:flex; gap:10px; flex-wrap:wrap; }
+  .badge{ border:1px dashed #e5e7eb; padding:3px 8px; border-radius:999px; font-size:12px; color:#334155; background:#f8fafc; }
+
+  .actionbar{ position:absolute; top:10px; right:10px; display:flex; gap:6px; }
+  .iconbtn{ width:34px; height:34px; display:grid; place-items:center; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; }
+  .iconbtn:hover{ background:#f8fafc; }
+
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(2,6,23,.45); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal{ width:100%; max-width:460px; background:#fff; border-radius:14px; box-shadow:0 24px 60px rgba(2,6,23,.25); padding:16px; }
+  .modal h3{ margin:0 0 8px; color:#0f172a; }
+  .modal .muted{ color:#64748b; font-size:13px; margin-bottom:10px; }
+  .modal .row{ display:flex; gap:10px; align-items:center; }
+  .modal .field{ flex:1; border:1px solid var(--border); border-radius:10px; padding:10px; }
+  .modal .btn{ border:0; border-radius:10px; padding:10px 14px; font-weight:700; }
+  .btn-dark{ background:#111827; color:#fff; }
+  .btn-light{ background:#f3f4f6; }
+  .btn-danger{ background:#ef4444; color:#fff; }
+</style>
+
+<div class="wrap">
+  <div class="card">
+    <div class="head">
+       <a href="{% url 'dashboard' %}" class="btn-light" ...
+          style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+          <i class="fa fa-arrow-left"></i> Volver
+        </a>
+      <div>
+        <h2 class="title">Listado de procesos</h2>
+        <div class="subtitle">Gestiona carpetas y subcarpetas</div>
+      </div>
+
+      <div class="toolbar">
+        <form class="search" method="get" action="">
+          <i class="fa fa-search" style="color:#6b7280;"></i>
+          <input type="search" name="q" value="{{ q }}" placeholder="Buscar carpetas…" aria-label="Buscar carpetas" />
+          {% if orden %}<input type="hidden" name="orden" value="{{ orden }}">{% endif %}
+        </form>
+
+        <form method="get" action="">
+          {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+          <select name="orden" class="select" onchange="this.form.submit()" aria-label="Ordenar por">
+            <option value="">Ordenar…</option>
+            <option value="nombre"  {% if orden == 'nombre' %}selected{% endif %}>Nombre (A-Z)</option>
+            <option value="-nombre" {% if orden == '-nombre' %}selected{% endif %}>Nombre (Z-A)</option>
+            <option value="-updated" {% if orden == '-updated' %}selected{% endif %}>Más recientes</option>
+            <option value="created" {% if orden == 'created' %}selected{% endif %}>Más antiguas</option>
+          </select>
+        </form>
+
+        <!-- Botón para abrir modal de crear en raíz -->
+        <a href="#" id="btnOpenCreateRoot" class="btn-gold">
+          <i class="fa fa-folder-plus"></i> Nueva carpeta
+        </a>
+      </div>
+    </div>
+
+    {% if raiz %}
+      <div class="grid" role="list">
+        {% for c in raiz %}
+          <div class="folder" role="listitem">
+            <div class="actionbar">
+              <!-- Crear subcarpeta -->
+              <button class="iconbtn" data-action="create" data-id="{{ c.id }}" data-name="{{ c.nombre }}" title="Crear subcarpeta">
+                <i class="fa fa-plus"></i>
+              </button>
+              <!-- Renombrar -->
+              <button class="iconbtn" data-action="rename" data-id="{{ c.id }}" data-name="{{ c.nombre }}" title="Renombrar">
+                <i class="fa fa-pen"></i>
+              </button>
+              <!-- Eliminar -->
+              <button class="iconbtn" data-action="delete" data-id="{{ c.id }}" data-name="{{ c.nombre }}" title="Eliminar">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+
+            <a class="primary" href="{% url 'procesos:carpeta' c.id %}" aria-label="Abrir carpeta {{ c.nombre }}">
+              <div class="icon"><i class="fa fa-folder"></i></div>
+              <div class="name">{{ c.nombre }}</div>
+              <div class="meta">
+                {% if c.cant_subs %}<span class="badge"><i class="fa fa-sitemap"></i> {{ c.cant_subs }} subcarpetas</span>{% endif %}
+                {% if c.cant_procesos %}<span class="badge"><i class="fa fa-list-check"></i> {{ c.cant_procesos }} procesos</span>{% endif %}
+                <span class="badge"><i class="fa fa-clock"></i> {{ c.creada_en|date:"d M Y" }}</span>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+        <div style="display:flex; gap:8px; justify-content:center; margin-top:16px;">
+          {% if page_obj.has_previous %}
+            <a class="btn-gold" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if orden %}&orden={{ orden }}{% endif %}">← Anterior</a>
+          {% endif %}
+          <div class="subtitle">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</div>
+          {% if page_obj.has_next %}
+            <a class="btn-gold" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if orden %}&orden={{ orden }}{% endif %}">Siguiente →</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="empty">
+        <i class="fa fa-folder-open"></i>
+        <div>No hay carpetas todavía.</div>
+        <div style="margin-top:6px;">Crea la primera con el botón <strong>“Nueva carpeta”</strong>.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- MODAL: Crear carpeta -->
+<div id="createModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <h3>Crear carpeta</h3>
+    <div class="muted" id="createSubtitle"></div>
+    <form id="createForm" method="post" action="{% url 'procesos:crear_carpeta' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <input type="hidden" name="padre" id="createParent">
+      <div class="row" style="margin-bottom:10px;">
+        <input type="text" name="nombre" id="createInput" class="field" placeholder="Nombre de la carpeta" required />
+      </div>
+      <div class="row" style="justify-content:flex-end;">
+        <button type="button" class="btn btn-light" data-close>Cancelar</button>
+        <button type="submit" class="btn btn-dark">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Renombrar -->
+<div id="renameModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <h3>Renombrar carpeta</h3>
+    <div class="muted" id="renameSubtitle"></div>
+    <form id="renameForm" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <div class="row" style="margin-bottom:10px;">
+        <input type="text" name="nombre" id="renameInput" class="field" required />
+      </div>
+      <div class="row" style="justify-content:flex-end;">
+        <button type="button" class="btn btn-light" data-close>Cancelar</button>
+        <button type="submit" class="btn btn-dark">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Eliminar -->
+<div id="deleteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal">
+    <h3>Eliminar carpeta</h3>
+    <div class="muted" id="deleteSubtitle"></div>
+    <form id="deleteForm" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <div class="row" style="justify-content:flex-end; margin-top:10px;">
+        <button type="button" class="btn btn-light" data-close>Cancelar</button>
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const createModal = document.getElementById('createModal');
+    const renameModal = document.getElementById('renameModal');
+    const deleteModal = document.getElementById('deleteModal');
+
+    const createForm  = document.getElementById('createForm');
+    const renameForm  = document.getElementById('renameForm');
+    const deleteForm  = document.getElementById('deleteForm');
+
+    const createInput = document.getElementById('createInput');
+    const renameInput = document.getElementById('renameInput');
+
+    const createParent= document.getElementById('createParent');
+    const createSub   = document.getElementById('createSubtitle');
+    const renameSub   = document.getElementById('renameSubtitle');
+    const deleteSub   = document.getElementById('deleteSubtitle');
+
+    function open(el){ el.style.display = 'flex'; }
+    function close(el){ el.style.display = 'none'; }
+
+    // Abrir crear en raíz
+    const btnOpenCreateRoot = document.getElementById('btnOpenCreateRoot');
+    if (btnOpenCreateRoot){
+      btnOpenCreateRoot.addEventListener('click', function(e){
+        e.preventDefault();
+        createParent.value = "";
+        createSub.textContent = "Se creará en la raíz.";
+        createInput.value = "";
+        open(createModal);
+        setTimeout(()=>createInput.focus(), 50);
+      });
+    }
+
+    // Acciones: crear subcarpeta, renombrar, eliminar
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('.iconbtn');
+      if(!btn) return;
+
+      const id = btn.getAttribute('data-id');
+      const name = btn.getAttribute('data-name');
+      const action = btn.getAttribute('data-action');
+
+      if(action === 'create'){
+        createParent.value = id;
+        createSub.textContent = 'Dentro de: "' + name + '"';
+        createInput.value = "";
+        open(createModal);
+        setTimeout(()=>createInput.focus(), 50);
+      }
+
+      if(action === 'rename'){
+        renameForm.action = "{% url 'procesos:carpeta_renombrar' 0 %}".replace('/0/', '/' + id + '/');
+        renameInput.value = name;
+        renameSub.textContent = 'Nombre actual: ' + name;
+        open(renameModal);
+        setTimeout(()=>renameInput.focus(), 50);
+      }
+
+      if(action === 'delete'){
+        deleteForm.action = "{% url 'procesos:carpeta_eliminar' 0 %}".replace('/0/', '/' + id + '/');
+        deleteSub.textContent = 'Se eliminará la carpeta "' + name + '". Esta acción no se puede deshacer.';
+        open(deleteModal);
+      }
+    });
+
+    // Cerrar modales
+    document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => {
+      close(createModal); close(renameModal); close(deleteModal);
+    }));
+    ;[createModal, renameModal, deleteModal].forEach(m => {
+      m.addEventListener('click', e => { if(e.target === m) close(m); });
+    });
+    document.addEventListener('keydown', e => {
+      if(e.key === 'Escape'){ close(createModal); close(renameModal); close(deleteModal); }
+    });
+  })();
+</script>
+{% endblock %}

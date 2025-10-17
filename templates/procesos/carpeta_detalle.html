@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ carpeta.nombre }}{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{
+    --navy-900:#071534; --navy-800:#0B1E44; --navy-700:#112759;
+    --ink:#EAF0FF; --muted:#9FB0D6; --ink-strong:#ffffff;
+    --gold-1:#F7D67B; --gold-2:#DCA94F; --gold-3:#B17B2E;
+    --border:rgba(255,255,255,.10); --border-soft:rgba(255,255,255,.08);
+    --shadow:0 12px 48px rgba(0,0,0,.35); --shadow-soft:0 8px 28px rgba(0,0,0,.28);
+    --rad:16px; --ring:rgba(247,214,123,.32); --glass:rgba(255,255,255,.06);
+  }
+  body{
+    background: radial-gradient(1600px 900px at 10% -10%, #132654 0%, var(--navy-900) 60%);
+    color:var(--ink);
+  }
+  .wrap{ max-width:1180px; margin:38px auto; padding:0 24px; }
+
+  /* Header */
+  .hdr{
+    position:sticky; top:0; z-index:20;
+    backdrop-filter:saturate(120%) blur(6px);
+    background:linear-gradient(180deg, rgba(11,30,68,.92), rgba(11,30,68,.86));
+    border:1px solid var(--border);
+    border-radius:var(--rad);
+    padding:14px 16px;
+    box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px;
+  }
+  .left{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .ico{
+    width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+    background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    color:var(--gold-1); border:1px solid var(--border-soft); box-shadow:var(--shadow-soft);
+  }
+  .title{ margin:0; font-weight:900; color:var(--ink-strong); font-size:1.38rem; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .crumbs{ color:var(--muted); font-size:.92rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .crumbs a{ color:var(--gold-1); text-decoration:none; }
+  .crumbs i{ opacity:.8; }
+
+  /* Buttons */
+  .bar{ display:flex; flex-wrap:wrap; gap:10px; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; border-radius:12px; padding:10px 14px;
+    font-weight:800; text-decoration:none; border:1px solid var(--border-soft);
+    background:var(--glass); color:var(--ink);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.1); box-shadow:0 0 0 4px var(--ring) inset; }
+  .btn.primary{
+    border:0; background:linear-gradient(90deg, var(--gold-1), var(--gold-2)); color:#1a1a1a;
+    box-shadow:0 10px 26px rgba(220,169,79,.25);
+  }
+  .btn.primary:hover{ background:linear-gradient(90deg, var(--gold-2), var(--gold-3)); }
+  .btn.icon{ width:40px; height:40px; justify-content:center; padding:8px; }
+
+    .btn.sm{ padding:6px 10px; font-size:.9rem; border-radius:10px }
+    .btn.danger{ border-color:#b91c1c; background:#b91c1c; color:#fff }
+
+  /* Cards */
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border:1px solid var(--border);
+    border-radius:var(--rad);
+    padding:16px;
+    box-shadow:var(--shadow);
+    margin-bottom:16px;
+    position:relative; overflow:hidden;
+  }
+  .card:after{
+    content:""; position:absolute; right:-30%; bottom:-40%; width:360px; height:360px; border-radius:50%;
+    background:radial-gradient(closest-side, rgba(247,214,123,.18), transparent 70%);
+    pointer-events:none;
+  }
+  .section-title{ margin:0 0 12px; font-weight:900; color:#fff; display:flex; align-items:center; gap:10px; }
+  .section-title i{ color:var(--gold-1); }
+
+  /* Subcarpetas */
+  .grid{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+  .folder{
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--border);
+    border-radius:14px; padding:14px;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .folder:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(247,214,123,.22); border-color:rgba(247,214,123,.38); background:rgba(255,255,255,.065); }
+  .fhead{display:flex;align-items:center;justify-content:space-between; gap:10px;}
+  .fname{display:flex;align-items:center;gap:10px;color:var(--gold-1);font-weight:800;text-decoration:none; min-width:0;}
+  .fname span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badge{
+    display:inline-flex;gap:6px;align-items:center;margin-top:8px;background:rgba(255,255,255,.08);
+    border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:.85rem;color:var(--ink);
+  }
+  .badge i{color:var(--gold-1);}
+
+  .muted{ color:var(--muted); }
+
+  /* Table */
+  .table-wrap{
+    overflow:auto; border-radius:14px; border:1px solid var(--border); background:rgba(255,255,255,.03);
+  }
+  table{ width:100%; border-collapse:separate; border-spacing:0; min-width:860px; }
+  thead th{
+    position:sticky; top:0; z-index:1;
+    background:rgba(5,14,34,.72); backdrop-filter: blur(6px);
+    text-align:left; color:var(--muted); font-weight:700; padding:12px 14px; font-size:.92rem; border-bottom:1px solid var(--border);
+  }
+  tbody tr{ transition: background .12s ease, transform .06s ease; }
+  tbody tr:hover{ background:rgba(255,255,255,.035); }
+  td{ border-top:1px solid var(--border-soft); padding:12px 14px; color:var(--ink); vertical-align:middle; }
+  tbody tr:first-child td{ border-top:0; }
+  .docname{ display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; font-weight:800; }
+  .docname i{ color:var(--gold-1); }
+
+  /* Inputs inline */
+  .inline-input, .inline-select, .inline-text{
+    background:rgba(255,255,255,.06);
+    color:var(--ink);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px 10px;
+    width:100%;
+  }
+  .inline-select{ width:auto; }
+  .inline-text{ resize:vertical; min-height:38px; }
+
+  /* Pager */
+  .pager{ margin-top:12px; display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
+  .pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:rgba(255,255,255,.03); }
+
+  /* Modal */
+  .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center; z-index:60; }
+  .modal-card{ width:min(480px,90%); background:#fff; color:#111; border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .field{ width:100%; border:1.5px solid #ccc; border-radius:10px; padding:10px; transition: box-shadow .12s ease, border-color .12s ease; }
+  .field:focus{ outline:none; border-color:#b98a3a; box-shadow:0 0 0 4px rgba(220,169,79,.25); }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none!important; transition:none!important; }
+  }
+</style>
+
+<div class="wrap">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="left">
+      <div class="ico"><i class="fa {% if es_documento %}fa-folder{% else %}fa-briefcase{% endif %}"></i></div>
+      <div>
+        <div class="crumbs">
+          <a href="{% url 'dashboard' %}">Inicio</a> <i class="fa fa-angle-right"></i>
+          {% if es_documento %}
+            <a href="{% url 'procesos:documentos_lista' %}">Documentos</a>
+          {% else %}
+            <a href="{% url 'procesos:lista' %}">Procesos</a>
+          {% endif %}
+          <i class="fa fa-angle-right"></i> <span>{{ carpeta.nombre }}</span>
+        </div>
+        <h2 class="title">{{ carpeta.nombre }}</h2>
+      </div>
+    </div>
+
+    <div class="bar">
+      {% if es_documento %}
+        <a class="btn" href="{% url 'procesos:documentos_lista' %}"><i class="fa fa-arrow-left"></i> Volver</a>
+        <a class="btn" href="{% url 'procesos:subir_documento' %}?carpeta={{ carpeta.id }}"><i class="fa fa-upload"></i> Subir documento</a>
+      {% else %}
+        <a class="btn" href="{% url 'procesos:lista' %}"><i class="fa fa-arrow-left"></i> Volver</a>
+      {% endif %}
+      <button id="btnNuevaSub" class="btn primary"><i class="fa fa-folder-plus"></i> Nueva subcarpeta</button>
+    </div>
+  </div>
+
+  <!-- Subcarpetas -->
+  <div class="card">
+    <h3 class="section-title"><i class="fa fa-sitemap"></i> Subcarpetas</h3>
+    {% if hijas %}
+      <div class="grid">
+        {% for h in hijas %}
+          <div class="folder">
+            <div class="fhead">
+              <a class="fname" href="{% url 'procesos:carpeta_detalle' h.id %}">
+                <i class="fa fa-folder"></i> <span>{{ h.nombre }}</span>
+              </a>
+              <div class="btns" style="display:flex;gap:8px;">
+                {% if es_documento %}
+                  <a class="btn icon" href="{% url 'procesos:subir_documento' %}?carpeta={{ h.id }}" title="Subir a esta carpeta">
+                    <i class="fa fa-upload"></i>
+                  </a>
+                {% endif %}
+                <button class="btn icon" data-action="sub" data-id="{{ h.id }}" title="Nueva subcarpeta">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="badge"><i class="fa fa-layer-group"></i> subcarpetas</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="muted">No hay subcarpetas.</div>
+    {% endif %}
+  </div>
+
+  {% if es_documento %}
+    <!-- Documentos -->
+    <div class="card">
+      <h3 class="section-title"><i class="fa fa-file-lines"></i> Documentos</h3>
+      {% if docs and docs|length %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Versión</th>
+                <th>Subido por</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in docs %}
+                <tr>
+                  <td><span class="docname"><i class="fa fa-file"></i> {{ d.nombre }}</span></td>
+                  <td>v{{ d.version }}</td>
+                  <td class="muted">{{ d.subido_por|default:"—" }}</td>
+                  <td>
+                    <a class="btn" href="{% url 'procesos:descargar' d.id %}" target="_blank" rel="noopener">
+                      <i class="fa fa-download"></i> Ver / Descargar
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="muted">No hay documentos.</div>
+      {% endif %}
+    </div>
+  {% else %}
+    <!-- Procesos -->
+    <div class="card">
+      <h3 class="section-title"><i class="fa fa-briefcase"></i> Procesos</h3>
+      {% if page_obj and page_obj.object_list %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>N° proceso</th>
+                <th>Estado</th>
+                <th>Ciudad</th>
+                <th>Observación</th>
+                <th>Creado</th>
+                <th>Fecha de Vencimiento</th>
+                <th style="width:170px;">Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+            {% for p in page_obj %}
+              <tr>
+                <!-- Nombre (sin cambiar tu comportamiento actual) -->
+                <td class="nombre-cell">
+                  {% if p.carpeta_documentos_id %}
+                    <a href="{% url 'procesos:carpeta_detalle' p.carpeta_documentos_id %}"
+                       class="folder-link"
+                       title="Abrir carpeta documental"
+                       onclick="event.stopPropagation();">
+                      <i class="fa fa-folder-open"></i>
+                    </a>
+                  {% else %}
+                    <i class="fa fa-folder"></i>
+                  {% endif %}
+                  {{ p.nombre }}
+                </td>
+
+                <!-- Número -->
+                <td class="muted">{{ p.numero_proceso|default:"—" }}</td>
+
+                <!-- Estado (editable) -->
+                <td>
+                  <select class="inline-select js-inline-select"
+                          data-id="{{ p.id }}"
+                          data-field="estado">
+                    <option value="SIN" {% if p.estado == "SIN" %}selected{% endif %}>Sin empezar</option>
+                    <option value="CUR" {% if p.estado == "CUR" %}selected{% endif %}>En curso</option>
+                    <option value="FIN" {% if p.estado == "FIN" %}selected{% endif %}>Finalizado</option>
+                    <option value="OBS" {% if p.estado == "OBS" %}selected{% endif %}>Observación</option>
+                    <option value="CAM" {% if p.estado == "CAM" %}selected{% endif %}>Cambio de abogado</option>
+                    <option value="CA"  {% if p.estado == "CA"  %}selected{% endif %}>Casación</option>
+                  </select>
+                </td>
+
+                <!-- Ciudad -->
+                <td class="muted">{{ p.ciudad|default:"—" }}</td>
+
+                <!-- Observación (editable) -->
+                <td style="min-width:240px;max-width:420px;">
+                  <textarea class="inline-text js-inline-text"
+                            data-id="{{ p.id }}"
+                            data-field="observacion"
+                            rows="1"
+                            placeholder="Escribe una observación y sal del campo para guardar…">{{ p.observacion|default_if_none:'' }}</textarea>
+                </td>
+
+                <!-- Creado -->
+                <td class="muted">{{ p.creado_en|date:"d/m/Y H:i" }}</td>
+
+                <!-- Fecha revisión (solo mostrar; formateada) -->
+                <td class="muted">
+                  {% if p.fecha_revision %}{{ p.fecha_revision|date:"d/m/Y" }}{% else %}—{% endif %}
+                </td>
+                  <td>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <!-- Editar: respeta retorno usando ?next= la URL actual -->
+                        <a class="btn sm" href="{% url 'procesos:proceso_editar' p.id %}?next={{ request.get_full_path|urlencode }}">
+                          <i class="fa fa-pen"></i> Editar
+                        </a>
+
+                        <!-- Eliminar: va a pantalla de confirmación (GET) y desde ahí POST seguro -->
+                        <a class="btn sm danger" href="{% url 'procesos:proceso_eliminar' p.id %}?next={{ request.get_full_path|urlencode }}">
+                          <i class="fa fa-trash"></i> Eliminar
+                        </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+          <div class="pager">
+            {% if page_obj.has_previous %}
+              <a class="btn" href="?page={{ page_obj.previous_page_number }}">« Anterior</a>
+            {% endif %}
+            <span class="pill">Página {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+              <a class="btn" href="?page={{ page_obj.next_page_number }}">Siguiente »</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="muted">No hay procesos.</div>
+      {% endif %}
+
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <a class="btn primary" href="{% url 'procesos:proceso_nuevo' carpeta.id %}"><i class="fa fa-plus"></i> Nuevo proceso</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal: nueva subcarpeta -->
+<div id="modal" class="modal">
+  <div class="modal-card">
+    <h3>Nueva subcarpeta</h3>
+    <form method="post" action="{% url 'procesos:crear_carpeta' %}">
+      {% csrf_token %}
+      <input type="hidden" name="seccion" value="{% if es_documento %}documentos{% else %}procesos{% endif %}">
+      <input type="hidden" name="padre" value="{{ carpeta.id }}">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <input class="field" name="nombre" placeholder="Nombre de la subcarpeta" required>
+      <div class="actions" style="margin-top:12px;">
+        <button type="button" class="btn" data-close>Cancelar</button>
+        <button class="btn primary" type="submit">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Modal
+  const modal = document.getElementById('modal');
+  document.getElementById('btnNuevaSub')?.addEventListener('click', e=>{
+    e.preventDefault(); modal.style.display='flex';
+  });
+  function closeM(){ modal.style.display='none'; }
+  modal.addEventListener('click', e=>{ if(e.target===modal) closeM(); });
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeM));
+  window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeM(); });
+
+  // ===== CSRF helper =====
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  async function saveInline(pk, field, value) {
+    try {
+      const url = `{% url 'procesos:proceso_inline_update' 0 %}`.replace('/0/', `/${pk}/`);
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ field, value }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) throw new Error((data && data.error) || 'Error al guardar');
+      return true;
+    } catch (e) {
+      console.error(e);
+      alert(e.message || 'No se pudo guardar el cambio.');
+      return false;
+    }
+  }
+
+  // Estado (select)
+  document.querySelectorAll('.js-inline-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const ok = await saveInline(sel.dataset.id, sel.dataset.field, sel.value);
+      if (ok) {
+        sel.style.boxShadow = '0 0 0 3px rgba(34,197,94,.35)';
+        setTimeout(()=> sel.style.boxShadow = '', 700);
+      }
+    });
+  });
+
+  // Observación (textarea) — guarda al salir de foco o Ctrl/Cmd+Enter
+  function autogrow(t){ t.style.height='auto'; t.style.height=(t.scrollHeight)+'px'; }
+  document.querySelectorAll('.js-inline-text').forEach(ta => {
+    autogrow(ta);
+    ta.addEventListener('input', () => autogrow(ta));
+
+    ta.addEventListener('blur', async () => {
+      const ok = await saveInline(ta.dataset.id, ta.dataset.field, ta.value);
+      if (ok) {
+        ta.style.boxShadow = '0 0 0 3px rgba(34,197,94,.35)';
+        setTimeout(()=> ta.style.boxShadow = '', 700);
+      }
+    });
+
+    ta.addEventListener('keydown', async (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const ok = await saveInline(ta.dataset.id, ta.dataset.field, ta.value);
+        if (ok) ta.blur();
+      }
+    });
+  });
+
+  // Botones "nueva sub" en cada tarjeta hija
+  document.querySelectorAll('[data-action="sub"]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const form = modal.querySelector('form');
+      form.querySelector('input[name="padre"]').value = btn.dataset.id;
+      modal.style.display='flex';
+    });
+  });
+</script>
+{% endblock %}

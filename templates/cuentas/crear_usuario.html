@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Crear usuario{% endblock %}
+{% block content %}
+<div class="container">
+  <h2 style="margin:0;color:#0d47a1;">Crear usuario</h2>
+
+  {% for m in messages %}
+    <div class="helper">{{ m }}</div>
+  {% endfor %}
+
+  <form method="post" class="grid">
+    {% csrf_token %}
+
+    <div class="field">
+      <label for="{{ form.cedula.id_for_label }}">Cédula</label>
+      {{ form.cedula }}
+      {{ form.cedula.errors }}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.first_name.id_for_label }}">Nombre</label>
+      {{ form.first_name }}
+      {{ form.first_name.errors }}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.last_name.id_for_label }}">Apellido</label>
+      {{ form.last_name }}
+      {{ form.last_name.errors }}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.email.id_for_label }}">Email</label>
+      {{ form.email }}
+      {{ form.email.errors }}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.password.id_for_label }}">Contraseña</label>
+      {{ form.password }}
+      {{ form.password.errors }}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.password2.id_for_label }}">Repite la contraseña</label>
+      {{ form.password2 }}
+      {{ form.password2.errors }}
+    </div>
+
+    <button class="btn" type="submit">Crear usuario</button>
+  </form>
+
+  <p class="helper" style="margin-top:12px;">
+    <a href="{% url 'lista_usuarios' %}">Ver lista de usuarios</a>
+  </p>
+</div>
+{% endblock %}

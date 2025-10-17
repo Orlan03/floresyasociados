@@ -1,0 +1,222 @@
+{# templates/procesos/subir_documento.html #}
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}Subir documento{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{
+    --bg:#0b1220;           /* fondo */
+    --surface:#0f172a;      /* tarjetas */
+    --border:#1f2937;
+    --muted:#94a3b8;
+    --text:#e5e7eb;
+    --title:#f8fafc;
+    --gold1:#f7d67b;
+    --gold2:#dca94f;
+    --ring:rgba(247,214,123,.35);
+    --ok:#22c55e;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+  }
+
+  body{ background:var(--bg); }
+  .wrap{ max-width:880px; margin:36px auto; padding:0 20px; }
+
+  .page-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:10px 14px; border-radius:12px; text-decoration:none; cursor:pointer;
+    background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.03));
+    border:1px solid var(--border); color:var(--text);
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); border-color:#334155; }
+  .btn.primary{
+    border:0; color:#111; font-weight:800;
+    background:linear-gradient(90deg,var(--gold1),var(--gold2));
+    box-shadow:0 8px 24px rgba(247,214,123,.12);
+  }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--muted);
+  }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px;
+    box-shadow:0 12px 40px rgba(2,6,23,.25);
+  }
+
+  .h1{
+    margin:0 0 6px; color:var(--title); font-size:24px; font-weight:800; letter-spacing:.2px;
+  }
+  .sub{ color:var(--muted); margin:0 0 18px; }
+
+  .form-grid{ display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:720px){ .form-grid{ grid-template-columns:1fr 1fr; } }
+
+  .col-span-2{ grid-column:1 / -1; }
+
+  .label{ color:var(--text); font-weight:700; margin:2px 0 8px; display:block; }
+  .hint{ color:var(--muted); font-size:.92rem; margin-top:6px; }
+  .error{ color:var(--danger); font-size:.92rem; margin-top:6px; }
+
+  .input{
+    width:100%; border-radius:12px; padding:12px 14px;
+    background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--text);
+    outline:none; transition:border-color .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .input::placeholder{ color:#9aa4b2; }
+  .input:focus{
+    border-color:#374151; box-shadow:0 0 0 6px var(--ring); background:rgba(255,255,255,.06);
+  }
+
+  .dropzone{
+    position:relative; border:1.5px dashed #334155; border-radius:14px; padding:18px;
+    background:rgba(255,255,255,.03); transition:border-color .12s ease, background .12s ease;
+    cursor:pointer;
+  }
+  .dropzone:hover{ background:rgba(255,255,255,.05); border-color:#3b4252; }
+  .dropzone.dragover{ border-color:var(--gold2); background:rgba(247,214,123,.06); }
+
+  .dz-inner{ display:flex; gap:14px; align-items:center; justify-content:flex-start; flex-wrap:wrap; }
+  .dz-icon{
+    width:42px; height:42px; display:grid; place-items:center; border-radius:12px;
+    background:linear-gradient(90deg,var(--gold1),var(--gold2)); color:#111; font-size:18px; font-weight:900;
+  }
+  .dz-text{ color:var(--text); }
+  .dz-sub{ color:var(--muted); font-size:.92rem; }
+  .file-meta{ margin-top:8px; color:var(--muted); }
+
+  .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+</style>
+
+<div class="wrap">
+
+  <div class="page-head">
+    <a class="btn" href="{% url 'procesos:carpeta_detalle' carpeta.id %}">
+      <i class="fa fa-arrow-left"></i><span>Volver</span>
+    </a>
+    <span class="pill">
+      <i class="fa fa-folder-closed"></i>
+      Destino: <strong style="color:var(--text)">{{ carpeta.nombre }}</strong>
+    </span>
+  </div>
+
+  <div class="card">
+    <h2 class="h1">Subir documento</h2>
+    <p class="sub">Nombra tu archivo claramente y arrástralo o selecciónalo. Verás los detalles antes de enviar.</p>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="carpeta" value="{{ carpeta.id }}">
+
+      <div class="form-grid">
+        <div class="col-span-2">
+          <label class="label" for="{{ form.nombre.id_for_label }}">Nombre del documento</label>
+          {# Campo nombre con clases y placeholder #}
+          {% render_field form.nombre class+="input" placeholder="Ej.: Contrato_Cliente_JuanPerez_2025" %}
+          {% if form.nombre.errors %}
+            <div class="error">{{ form.nombre.errors|join:", " }}</div>
+          {% else %}
+            <div class="hint">Usa un nombre descriptivo. Evita espacios y caracteres especiales.</div>
+          {% endif %}
+        </div>
+
+        <div class="col-span-2">
+          <label class="label" for="{{ form.archivo.id_for_label }}">Archivo</label>
+
+          {# Dropzone que activa el input real #}
+          <div id="dropzone" class="dropzone">
+            <div class="dz-inner">
+              <div class="dz-icon"><i class="fa fa-upload"></i></div>
+              <div>
+                <div class="dz-text"><strong>Arrastra y suelta aquí</strong> o haz clic para seleccionar</div>
+                <div class="dz-sub">Formatos comunes: PDF, DOCX, JPG, PNG (según tu configuración)</div>
+              </div>
+            </div>
+            <div id="fileMeta" class="file-meta" style="display:none;"></div>
+          </div>
+
+          {# Input real (oculto visualmente pero accesible) #}
+          <div style="height:0; overflow:hidden;">
+            {% render_field form.archivo class+="input" id="fileInput" %}
+          </div>
+
+          {% if form.archivo.errors %}
+            <div class="error">{{ form.archivo.errors|join:", " }}</div>
+          {% else %}
+            {% if form.archivo.help_text %}
+              <div class="hint">{{ form.archivo.help_text }}</div>
+            {% else %}
+              <div class="hint">Tamaño máximo típico: 10–25 MB (ajústalo en tu configuración si aplica).</div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="btn" href="{% url 'procesos:carpeta_detalle' carpeta.id %}">
+          <i class="fa fa-xmark"></i><span>Cancelar</span>
+        </a>
+        <button class="btn primary" type="submit">
+          <i class="fa fa-cloud-arrow-up"></i><span>Subir</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const meta = document.getElementById('fileMeta');
+
+    // Abrir selector al hacer click en la zona
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    // Arrastrar/soltar
+    ['dragenter','dragover'].forEach(ev => {
+      dropzone.addEventListener(ev, e => {
+        e.preventDefault(); e.stopPropagation();
+        dropzone.classList.add('dragover');
+      });
+    });
+    ['dragleave','drop'].forEach(ev => {
+      dropzone.addEventListener(ev, e => {
+        e.preventDefault(); e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+        fileInput.files = e.dataTransfer.files;
+        showMeta(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Cuando el usuario selecciona desde el diálogo
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]){ showMeta(fileInput.files[0]); }
+    });
+
+    // Mostrar metadatos simples
+    function showMeta(file){
+      const sizeMB = (file.size/1024/1024).toFixed(2);
+      meta.style.display = 'block';
+      meta.innerHTML = `
+        <span style="color:var(--text);"><i class="fa fa-file"></i> <strong>${file.name}</strong></span>
+        <span style="margin-left:10px;">• ${sizeMB} MB</span>
+        <span style="margin-left:10px;">• ${file.type || 'Tipo desconocido'}</span>
+      `;
+    }
+  })();
+</script>
+{% endblock %}

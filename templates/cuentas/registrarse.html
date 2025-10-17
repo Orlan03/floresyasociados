@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Registrarse - Flores y Asociados{% endblock %}
+{% block content %}
+  <div class="container">
+    <h2 style="margin-top:0;color:#0d47a1;">Crear cuenta</h2>
+    <form method="post" class="grid">
+      {% csrf_token %}
+      <div class="field">
+        <label for="id_cedula">Cédula</label>
+        {{ form.cedula|add_class:"input" }}
+        {% for e in form.cedula.errors %}<div class="errorlist">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="id_first_name">Nombre</label>
+        {{ form.first_name|add_class:"input" }}
+      </div>
+      <div class="field">
+        <label for="id_last_name">Apellido</label>
+        {{ form.last_name|add_class:"input" }}
+      </div>
+      <div class="field">
+        <label for="id_email">Email (opcional)</label>
+        {{ form.email|add_class:"input" }}
+      </div>
+      <div class="field">
+        <label for="id_password">Contraseña</label>
+        {{ form.password|add_class:"input" }}
+      </div>
+      <div class="field">
+        <label for="id_password2">Repite la contraseña</label>
+        {{ form.password2|add_class:"input" }}
+      </div>
+      <button class="btn" type="submit">Crear cuenta</button>
+    </form>
+    <p class="helper center" style="margin-top:12px;">
+      ¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>
+    </p>
+  </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+<div class="folder">
+  <div class="title"><i class="fa fa-folder-open" style="color:#e0b84c;"></i> {{ carpeta.nombre }}</div>
+  {% if carpeta.documentos.all %}
+    <ul>
+      {% for d in carpeta.documentos.all %}
+        <li class="doc">
+          <a href="{% url 'procesos_descargar' d.id %}"><i class="fa fa-file"></i> {{ d.nombre }}</a>
+          <span class="muted"> (v{{ d.version }})</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% if carpeta.hijas.all %}
+    <ul>
+      {% for sub in carpeta.hijas.all %}
+        {% include 'procesos/partials/carpeta.html' with carpeta=sub %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

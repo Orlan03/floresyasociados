@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Eliminar proceso{% endblock %}
+{% block content %}
+<style>
+  .wrap{max-width:720px;margin:40px auto;padding:0 16px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px}
+  .danger{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:10px 12px;border-radius:10px;margin-bottom:12px}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;text-decoration:none;color:#111}
+  .btn.danger{background:#b91c1c;border-color:#b91c1c;color:#fff}
+</style>
+
+<div class="wrap">
+  <div class="card">
+    <div class="danger"><strong>Atención:</strong> Esta acción no se puede deshacer.</div>
+    <h2 style="margin:0 0 8px 0;">Eliminar proceso</h2>
+    <p>¿Seguro que deseas eliminar el proceso <strong>{{ proceso.nombre }}</strong> de la carpeta <strong>{{ carpeta.nombre }}</strong>?</p>
+
+    <form method="post" style="margin-top:14px;">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <a class="btn" href="{{ next_url }}">Cancelar</a>
+      <button type="submit" class="btn danger"><i class="fa fa-trash"></i> Eliminar definitivamente</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

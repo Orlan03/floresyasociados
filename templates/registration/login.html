@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Acceso - Flores y Asociados{% endblock %}
+
+{% block content %}
+<style>
+  /* ocultar barra superior del base en el login */
+  .topbar{ display:none; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background: #0A1A2F; /* Azul marino */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  .login-card img { max-width: 100px; margin-bottom: 20px; }
+  .login-card h2 { margin: 0 0 20px; font-size: 1.3rem; color: #0A1A2F; font-weight: 600; }
+  .field { margin-bottom: 16px; text-align: left; }
+  .field label { font-size: 0.9rem; color: #0A1A2F; margin-bottom: 6px; display: block; font-weight: 500; }
+  .input { width: 100%; padding: 12px 14px; border: 1.5px solid #ccc; border-radius: 10px; font-size: 0.95rem; outline: none; }
+  .input:focus { border-color: #D4AF37; box-shadow: 0 0 6px rgba(212,175,55,0.4); }
+  .btn {
+    width: 100%; padding: 12px 16px; border: 0; border-radius: 10px;
+    background: linear-gradient(90deg, #D4AF37, #f1c66d); color: #0A1A2F;
+    font-weight: 600; cursor: pointer; font-size: 1rem; transition: transform .2s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .helper { margin-top: 14px; font-size: 0.9rem; color: #555; }
+  .errorlist { background:#ffebee;color:#b71c1c;padding:10px;border-radius:8px;margin-bottom:12px;list-style:none;font-size:.9rem; }
+</style>
+
+<div class="login-card">
+  <!-- Logo -->
+  <img src="{% static 'img/logo.jpg' %}" alt="Logo">
+
+  <h2>Acceso al Sistema</h2>
+
+  {% if form.errors %}
+    <ul class="errorlist"><li>Cédula o contraseña incorrectos.</li></ul>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="field">
+      <label for="id_username">Cédula</label>
+      <input class="input" type="text" name="username" id="id_username" maxlength="10" pattern="\d{10}" placeholder="Ej. 0102030405" autofocus required>
+    </div>
+    <div class="field">
+      <label for="id_password">Contraseña</label>
+      <input class="input" type="password" name="password" id="id_password" required>
+    </div>
+    <button class="btn" type="submit">Ingresar</button>
+  </form>
+
+  <p class="helper">¿Olvidaste tu contraseña? Contáctate con el administrador.</p>
+</div>
+{% endblock %}

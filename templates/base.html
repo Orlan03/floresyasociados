@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Flores y Asociados{% endblock %}</title>
+
+  <style>
+    :root{
+      --navy:#0A1A2F;
+      --navy-2:#0f223b;
+      --gold:#D4AF37;
+      --gold-2:#f1c66d;
+      --text:#0A1A2F;
+      --muted:#637082;
+      --card:#ffffff;
+      --radius:16px;
+      --shadow:0 8px 22px rgba(0,0,0,.18);
+      --shadow-soft:0 6px 16px rgba(0,0,0,.12);
+    }
+
+    /* Layout base */
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, Arial, sans-serif;
+      color:var(--text);
+      background: var(--navy);
+    }
+
+    /* Ya no usamos barra azul global */
+    .topbar{ display:none; }
+
+    /* Contenedor blanco reutilizable */
+    .container{
+      max-width:1100px;
+      margin:32px auto;
+      padding:0 20px;
+    }
+
+    /* Tarjeta genérica */
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      padding:20px;
+    }
+
+    /* Tipografía utilidades */
+    .muted{ color:var(--muted); }
+    h1,h2,h3{ margin:0 0 .4rem 0; }
+
+    /* Campos de formulario */
+    .field{ margin-bottom:14px; }
+    .field label{ display:block; font-size:.92rem; color:var(--text); margin-bottom:6px; }
+    .input{
+      width:100%; padding:12px 14px; border:1.5px solid #d8dee9; border-radius:12px;
+      outline:none; font-size:.95rem; background:#fff;
+    }
+    .input:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.18); }
+
+    /* Botones */
+    .btn{
+      display:inline-block; text-decoration:none; text-align:center; cursor:pointer;
+      border:0; border-radius:12px; padding:12px 16px; font-weight:700;
+    }
+    .btn-primary{
+      background:linear-gradient(90deg,var(--gold),var(--gold-2)); color:var(--navy);
+    }
+    .btn-outline{
+      background:transparent; color:#f7d789; border:1.5px solid #f7d789;
+    }
+    .btn:hover{ transform:translateY(-1px); transition:transform .15s ease; }
+
+    /* Grid sencilla */
+    .grid{ display:grid; gap:14px; }
+    @media (min-width:700px){ .grid.cols-3{ grid-template-columns:repeat(3,1fr); } .grid.cols-2{ grid-template-columns:repeat(2,1fr);} }
+
+    /* Mensajes de error */
+    .errorlist{ background:#ffebee;color:#b71c1c;padding:10px;border-radius:10px;list-style:none;margin:8px 0; }
+
+    /* Tarjeta encabezado del dashboard */
+    .header-card{
+      display:flex; align-items:center; justify-content:space-between;
+      background:#fff; border-radius:var(--radius); padding:20px 26px; box-shadow:var(--shadow);
+    }
+    .brand{ display:flex; align-items:center; gap:14px; }
+    .brand img{ width:70px; height:auto; display:block; }
+    .brand-title{ font-size:1.4rem; font-weight:800; color:var(--text); }
+    .brand-sub{ color:var(--muted); font-size:.95rem; }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+  {% if messages %}
+    <div class="flash-stack" style="max-width:1120px;margin:12px auto;padding:0 16px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="
+          border-radius:10px;padding:12px 14px;margin-bottom:8px;
+          border:1.5px solid #fee2e2; background:#fef2f2; color:#7f1d1d;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</head>
+<body>
+  <!-- La topbar se oculta por estilo; puedes activarla si algún día quieres un header global -->
+  <div class="topbar">
+    <div class="container" style="color:#fff; padding:12px 0; font-weight:700;">Flores y Asociados</div>
+  </div>
+
+  {% block content %}{% endblock %}
+</body>
+</html>

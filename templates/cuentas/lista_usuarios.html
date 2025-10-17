@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Usuarios - Flores y Asociados{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{
+    --navy-900:#071534; --navy-800:#0B1E44; --navy-700:#112759;
+    --ink:#EAF0FF; --muted:#9FB0D6;
+    --gold-1:#F7D67B; --gold-2:#DCA94F; --gold-3:#B17B2E;
+    --ring:rgba(247,214,123,.32);
+    --border:rgba(255,255,255,.08);
+    --shadow:0 10px 40px rgba(0,0,0,.35);
+    --rad:16px;
+  }
+  body{ background: radial-gradient(1200px 700px at 20% -10%, #132654 0%, var(--navy-900) 55%); color: var(--ink); }
+  .wrap{ max-width:1180px; margin:32px auto; padding:0 22px; }
+
+  .hdr{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    background: linear-gradient(180deg, var(--navy-800), rgba(11,30,68,.96));
+    border:1px solid var(--border); border-radius: var(--rad);
+    padding:16px 18px; margin-bottom:18px; box-shadow: var(--shadow);
+  }
+  .hdr h1{ margin:0; font-size:1.25rem; font-weight:900; color:#fff; }
+  .btn{
+    appearance:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+    border:1px solid var(--border); color:var(--ink); background:rgba(255,255,255,.02);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); background:rgba(255,255,255,.04); box-shadow: 0 0 0 4px var(--ring) inset; }
+  .btn-primary{
+    border:0; background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+    color:#1a1a1a; box-shadow: 0 8px 24px rgba(220,169,79,.25);
+  }
+  .btn-primary:hover{ background: linear-gradient(90deg, var(--gold-2), var(--gold-3)); }
+
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+    border:1px solid var(--border); border-radius: var(--rad);
+    padding:18px; box-shadow: var(--shadow);
+  }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .search{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:12px;
+    padding:8px 10px;
+  }
+  .search input{
+    border:0; background:transparent; outline:none; color:#fff; min-width:260px;
+  }
+
+  table{ width:100%; border-collapse:collapse; }
+  th, td{
+    padding:12px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  th{ color:#cfe0ff; font-weight:900; font-size:.92rem; letter-spacing:.2px; }
+  td{ color:#eaf0ff; font-size:.95rem; }
+  tbody tr:hover{ background:rgba(255,255,255,.03); }
+
+  .badge{
+    display:inline-block; padding:4px 10px; border-radius:999px; font-weight:800; font-size:.78rem;
+    border:1px solid rgba(255,255,255,.15);
+  }
+  .b-staff{ background:rgba(99,102,241,.18); color:#c7caff; border-color:rgba(99,102,241,.35); }
+  .b-super{ background:rgba(16,185,129,.18); color:#bff4df; border-color:rgba(16,185,129,.35); }
+  .b-active{ background:rgba(16,185,129,.18); color:#bff4df; border-color:rgba(16,185,129,.35); }
+  .b-inactive{ background:rgba(220,38,38,.18); color:#ffbdbd; border-color:rgba(220,38,38,.35); }
+
+  .muted{ color:var(--muted); font-size:.92rem; }
+  .count{ color:#cfe0ff; font-weight:800; }
+</style>
+
+<div class="wrap">
+  <div class="hdr">
+    <h1><i class="fa fa-users"></i> Usuarios del sistema</h1>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a class="btn" href="{% url 'dashboard' %}"><i class="fa fa-house"></i> Volver al panel</a>
+      <a class="btn btn-primary" href="{% url 'cuentas:crear_usuario_simple' %}">
+        <i class="fa fa-user-plus"></i> Crear usuario
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <form method="get" class="search">
+        <i class="fa fa-magnifying-glass"></i>
+        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por usuario, nombre, apellido o correo…">
+        <button class="btn" type="submit"><i class="fa fa-arrow-right"></i> Buscar</button>
+      </form>
+      <div class="muted">Total: <span class="count">{{ usuarios|length }}</span></div>
+    </div>
+
+    <div style="overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Cédula</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Último acceso</th>
+            <th>Creado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios %}
+            <tr>
+              <td>#{{ u.id }}</td>
+              <td>{{ u.username }}</td>
+              <td>{{ u.perfil.cedula }}</td>
+              <td>{{ u.first_name|default:"—" }}</td>
+              <td>{{ u.last_name|default:"—" }}</td>
+              <td>{{ u.email|default:"—" }}</td>
+              <td>{{ u.perfil.telefono|default:"—" }}</td>
+              <td>
+                {% if u.is_superuser %}
+                  <span class="badge b-super">Superuser</span>
+                {% elif u.is_staff %}
+                  <span class="badge b-staff">Staff</span>
+                {% else %}
+                  <span class="muted">Usuario</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                  <span class="badge b-active">Activo</span>
+                {% else %}
+                  <span class="badge b-inactive">Inactivo</span>
+                {% endif %}
+              </td>
+              <td>{{ u.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
+              <td>{{ u.date_joined|date:"d/m/Y"|default:"—" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="11" class="muted">No hay usuarios para mostrar.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

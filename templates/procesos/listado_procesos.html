@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}Procesos{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{
+    --navy-900:#071534;
+    --navy-800:#0B1E44;
+    --navy-700:#112759;
+    --ink:#EAF0FF;
+    --muted:#9FB0D6;
+    --gold-1:#F7D67B;
+    --gold-2:#DCA94F;
+    --gold-3:#B17B2E;
+    --border:rgba(255,255,255,.08);
+    --shadow:0 10px 40px rgba(0,0,0,.35);
+    --rad:16px;
+  }
+
+  body{
+    background: radial-gradient(1600px 900px at 10% -10%, #132654 0%, var(--navy-900) 60%);
+    color:var(--ink);
+  }
+  .wrap{ max-width:1180px; margin:40px auto; padding:0 24px; }
+
+  /* ===== Topbar ===== */
+  .hdr{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    margin-bottom:18px;
+  }
+  .titlebox{ display:flex; align-items:center; gap:12px; }
+  .title-ico{
+    width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+    background:rgba(255,255,255,.08); color:var(--gold-1); border:1px solid var(--border);
+  }
+  .crumbs{ color:var(--muted); font-size:.9rem; display:flex; gap:8px; align-items:center; }
+  .crumbs a{ color:var(--gold-1); text-decoration:none; }
+  .title{ margin:0; font-size:1.4rem; font-weight:800; color:#fff; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; border-radius:12px;
+    padding:10px 14px; cursor:pointer; text-decoration:none; font-weight:800;
+    border:1px solid var(--border); background:rgba(255,255,255,.05); color:var(--ink);
+    transition:all .15s ease;
+  }
+  .btn:hover{ background:rgba(255,255,255,.1); transform:translateY(-1px); }
+  .btn.primary{
+    border:0; background:linear-gradient(90deg,var(--gold-1),var(--gold-2)); color:#1a1a1a;
+    box-shadow:0 8px 24px rgba(220,169,79,.25);
+  }
+  .btn.primary:hover{ background:linear-gradient(90deg,var(--gold-2),var(--gold-3)); }
+  .btn.icon{ width:40px; height:40px; justify-content:center; }
+
+  /* ===== Toolbar ===== */
+  .toolbar{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--border);
+    border-radius:var(--rad);
+    box-shadow:var(--shadow);
+    padding:14px;
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .search{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.05);
+    border:1.5px solid var(--border);
+    border-radius:10px; padding:10px 12px; min-width:280px; color:#fff;
+  }
+  .search input{
+    border:0; outline:none; width:100%;
+    background:transparent; color:var(--ink); font-size:1rem;
+  }
+  .select{
+    background:rgba(255,255,255,.05);
+    color:var(--ink);
+    border:1.5px solid var(--border);
+    border-radius:10px; padding:10px 12px; font-weight:600;
+  }
+
+  /* ===== Grid ===== */
+  .card{
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--border);
+    border-radius:var(--rad);
+    padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .grid{ display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+
+  .folder{
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    transition:all .2s ease;
+  }
+  .folder:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 28px rgba(247,214,123,.25);
+    border-color:rgba(247,214,123,.4);
+  }
+  .f-head{ display:flex; align-items:center; justify-content:space-between; }
+  .f-name{ display:flex; align-items:center; gap:10px; color:var(--gold-1); font-weight:800; text-decoration:none; }
+  .badges{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.08);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 10px;
+    color:var(--ink);
+    font-size:.85rem;
+  }
+  .badge i{ color:var(--gold-1); }
+
+  /* ===== Empty ===== */
+  .empty{text-align:center; color:var(--muted); padding:36px 10px;}
+  .empty i{ font-size:46px; color:var(--gold-1); }
+
+  /* ===== Modal ===== */
+  .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center; z-index:50; }
+  .modal-card{
+    width:min(480px,90%);
+    background:#fff; color:#111;
+    border-radius:16px; padding:20px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal h3{ margin:0 0 8px; color:#1a1a1a; }
+  .modal p{ color:#555; margin:0 0 12px; }
+  .field{ width:100%; border:1.5px solid #ccc; border-radius:10px; padding:10px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+</style>
+
+<div class="wrap">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="titlebox">
+      <div class="title-ico"><i class="fa fa-briefcase"></i></div>
+      <div>
+        <div class="crumbs">
+          <a href="{% url 'dashboard' %}">Inicio</a> <i class="fa fa-angle-right"></i> <span>Procesos</span>
+        </div>
+        <h2 class="title">Procesos</h2>
+      </div>
+    </div>
+    <a class="btn" href="{% url 'procesos:documentos_lista' %}"><i class="fa fa-folder"></i> Ir a documentos</a>
+  </div>
+
+  <!-- Barra herramientas -->
+  <div class="toolbar">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <div class="search">
+        <i class="fa fa-search"></i>
+        <input type="text" placeholder="Buscar carpeta..." oninput="filterCards(this.value)">
+      </div>
+      <select class="select" id="orderSelect" onchange="orderCards(this.value)">
+        <option value="az">Ordenar: A → Z</option>
+        <option value="za">Ordenar: Z → A</option>
+      </select>
+    </div>
+    <button id="btnNuevaRaiz" class="btn primary"><i class="fa fa-folder-plus"></i> Nueva carpeta</button>
+  </div>
+
+  <!-- Grid carpetas -->
+  <div class="card">
+    {% if raiz %}
+      <div id="folderGrid" class="grid">
+        {% for c in raiz %}
+        <div class="folder" data-name="{{ c.nombre|lower }}">
+          <div class="f-head">
+            <a class="f-name" href="{% url 'procesos:carpeta_detalle' c.id %}">
+              <i class="fa fa-folder"></i> {{ c.nombre }}
+            </a>
+            <button class="btn icon" data-action="sub" data-id="{{ c.id }}" title="Crear subcarpeta">
+              <i class="fa fa-plus"></i>
+            </button>
+          </div>
+          <div class="badges">
+            <span class="badge"><i class="fa fa-sitemap"></i> {{ c.cant_subs }} subcarpeta{{ c.cant_subs|pluralize }}</span>
+            <span class="badge"><i class="fa fa-list-check"></i> {{ c.cant_procesos }} proceso{{ c.cant_procesos|pluralize }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">
+        <i class="fa fa-folder-open"></i>
+        <p>No hay carpetas de procesos. Crea la primera.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal crear carpeta -->
+<div id="modal" class="modal">
+  <div class="modal-card">
+    <h3>Nueva carpeta (Procesos)</h3>
+    <p>Asigna un nombre claro y consistente.</p>
+    <form method="post" action="{% url 'procesos:crear_carpeta' %}">
+      {% csrf_token %}
+      <input type="hidden" name="seccion" value="procesos">
+      <input type="hidden" name="padre" id="padre">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <input class="field" type="text" name="nombre" placeholder="Ej. Civil · Cuenca" required>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close>Cancelar</button>
+        <button class="btn primary" type="submit">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('modal');
+  const padre = document.getElementById('padre');
+
+  document.getElementById('btnNuevaRaiz')?.addEventListener('click', e=>{
+    e.preventDefault(); padre.value=''; modal.style.display='flex';
+  });
+
+  document.querySelectorAll('[data-action="sub"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.preventDefault(); padre.value=b.dataset.id; modal.style.display='flex';
+    });
+  });
+
+  function closeModal(){ modal.style.display='none'; }
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeModal));
+  modal.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
+  window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+  function filterCards(q){
+    q = (q || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('#folderGrid .folder');
+    cards.forEach(card=>{
+      const name = card.dataset.name || '';
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  }
+
+  function orderCards(mode){
+    const grid = document.getElementById('folderGrid');
+    if(!grid) return;
+    const nodes = [...grid.children];
+    nodes.sort((a,b)=>{
+      const na = (a.dataset.name||'').localeCompare(b.dataset.name||'', 'es', {sensitivity:'base'});
+      return mode === 'za' ? -na : na;
+    });
+    nodes.forEach(n=>grid.appendChild(n));
+  }
+</script>
+{% endblock %}

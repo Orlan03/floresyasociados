@@ -1,0 +1,163 @@
+{# templates/procesos/buscar_documentos.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Buscar en Documentos{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{
+    --navy-900:#071534; --navy-800:#0B1E44; --navy-700:#112759;
+    --ink:#EAF0FF; --muted:#9FB0D6;
+    --gold-1:#F7D67B; --gold-2:#DCA94F; --gold-3:#B17B2E;
+    --border:rgba(255,255,255,.10); --ring:rgba(247,214,123,.32);
+    --rad:16px; --shadow:0 12px 48px rgba(0,0,0,.35);
+  }
+  body{ background: radial-gradient(1200px 700px at 20% -10%, #132654 0%, var(--navy-900) 55%); color:var(--ink); }
+  .wrap{ max-width:1100px; margin:34px auto; padding:0 20px; }
+
+  .hdr{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;
+    background:linear-gradient(180deg, rgba(11,30,68,.92), rgba(11,30,68,.86));
+    border:1px solid var(--border); border-radius:var(--rad); padding:14px 16px; box-shadow:var(--shadow);
+  }
+  .ttl{ margin:0; color:#fff; font-weight:900; font-size:1.18rem; }
+  .crumbs{ color:var(--muted); font-size:.92rem; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .crumbs a{ color:var(--gold-1); text-decoration:none; }
+
+  .searchbar{
+    display:flex; gap:10px; margin-top:10px;
+  }
+  .searchbar input{
+    flex:1; border-radius:12px; padding:10px 12px; border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06); color:#fff;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; border-radius:12px; padding:10px 14px;
+    font-weight:800; text-decoration:none; border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06); color:var(--ink);
+    transition:all .12s ease;
+  }
+  .btn.primary{ border:0; background:linear-gradient(90deg,var(--gold-1),var(--gold-2)); color:#1a1a1a; }
+  .btn:hover{ transform:translateY(-1px); }
+
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border:1px solid var(--border); border-radius:var(--rad); padding:16px; box-shadow:var(--shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:1.05rem; color:#fff; }
+  .list{ display:flex; flex-direction:column; gap:10px; }
+  .row{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.04);
+  }
+  .row .left{ display:flex; gap:10px; align-items:center; min-width:0; }
+  .row .icon{ width:36px; height:36px; display:grid; place-items:center; border-radius:10px; border:1px solid rgba(255,255,255,.12); }
+  .row .name{ color:#fff; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .meta{ color:#9FB0D6; font-size:.9rem; white-space:nowrap; }
+  .row a{ color:var(--gold-1); text-decoration:none; font-weight:800; }
+  .empty{
+    text-align:center; color:#9FB0D6; padding:16px; border:1px dashed rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.02);
+  }
+
+  .pagin{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+  .pagin a{ color:var(--ink); border:1px solid rgba(255,255,255,.12); padding:6px 10px; border-radius:10px; text-decoration:none; }
+  .pagin .cur{ background:rgba(255,255,255,.10); }
+</style>
+
+<div class="wrap">
+  <div class="hdr">
+    <div>
+      <div class="crumbs">
+        <a href="{% url 'dashboard' %}">Inicio</a> <i class="fa fa-angle-right"></i>
+        <a href="{% url 'procesos:documentos_lista' %}">Documentos</a> <i class="fa fa-angle-right"></i>
+        <span>Buscar</span>
+      </div>
+      <h2 class="ttl">Resultados para: “{{ q }}”</h2>
+
+      <form class="searchbar" action="{% url 'procesos:documentos_buscar' %}" method="get" onsubmit="return !!this.q.value.trim();">
+        <input type="search" name="q" value="{{ q }}" placeholder="Buscar carpetas y documentos…" required>
+        <button class="btn primary" type="submit"><i class="fa fa-search"></i> Buscar</button>
+      </form>
+    </div>
+
+    <a class="btn" href="{% url 'procesos:documentos_lista' %}"><i class="fa fa-arrow-left"></i> Volver</a>
+  </div>
+
+  <div class="grid">
+    <!-- Carpetas -->
+    <div class="card">
+      <h3>Carpetas ({{ total_c|default:0 }})</h3>
+      {% if page_c and page_c.object_list %}
+        <div class="list">
+          {% for c in page_c.object_list %}
+            <div class="row">
+              <div class="left">
+                <div class="icon"><i class="fa fa-folder"></i></div>
+                <div class="name">{{ c.nombre }}</div>
+              </div>
+              <div class="meta">
+                {{ c.cant_subs }} sub · {{ c.cant_docs }} docs
+                &nbsp;·&nbsp; <a href="{% url 'procesos:carpeta_detalle' c.id %}">Abrir</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if page_c.has_other_pages %}
+          <div class="pagin">
+            {% if page_c.has_previous %}
+              <a href="?q={{ q }}&pc={{ page_c.previous_page_number }}&pd={{ page_d.number|default:1 }}">«</a>
+            {% endif %}
+            <span class="cur">Pág. {{ page_c.number }} / {{ page_c.paginator.num_pages }}</span>
+            {% if page_c.has_next %}
+              <a href="?q={{ q }}&pc={{ page_c.next_page_number }}&pd={{ page_d.number|default:1 }}">»</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="empty">Sin carpetas que coincidan.</div>
+      {% endif %}
+    </div>
+
+    <!-- Documentos -->
+    <div class="card">
+      <h3>Documentos ({{ total_d|default:0 }})</h3>
+      {% if page_d and page_d.object_list %}
+        <div class="list">
+          {% for d in page_d.object_list %}
+            <div class="row">
+              <div class="left">
+                <div class="icon"><i class="fa fa-file"></i></div>
+                <div class="name">{{ d.nombre }}</div>
+              </div>
+              <div class="meta">
+                <a href="{% url 'procesos:descargar' d.id %}">Ver / Descargar</a>
+                &nbsp;·&nbsp; <a href="{% url 'procesos:carpeta_detalle' d.carpeta_id %}">Carpeta</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if page_d.has_other_pages %}
+          <div class="pagin">
+            {% if page_d.has_previous %}
+              <a href="?q={{ q }}&pc={{ page_c.number|default:1 }}&pd={{ page_d.previous_page_number }}">«</a>
+            {% endif %}
+            <span class="cur">Pág. {{ page_d.number }} / {{ page_d.paginator.num_pages }}</span>
+            {% if page_d.has_next %}
+              <a href="?q={{ q }}&pc={{ page_c.number|default:1 }}&pd={{ page_d.next_page_number }}">»</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="empty">Sin documentos que coincidan.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

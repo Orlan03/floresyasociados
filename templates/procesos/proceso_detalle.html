@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Proceso: {{ proceso.nombre }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+  :root{
+    --bg:#0b1220;
+    --card:#ffffff;
+    --muted:#64748b;
+    --border:#e5e7eb;
+    --ink:#0f172a;
+    --primary:#7c3aed;
+    --primary-2:#4338ca;
+    --gold:#e8d08a;
+  }
+  body{ background:var(--bg); }
+  .page{max-width:1000px;margin:22px auto;padding:0 16px;}
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:linear-gradient(180deg, rgba(11,18,32,.94), rgba(11,18,32,.88));
+    backdrop-filter: blur(6px);
+    padding:12px 0 8px; margin-bottom:12px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .back{
+    color:#111827; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    font-weight:700; padding:8px 12px; border-radius:10px; background:#f3f4f6; border:1px solid rgba(17,24,39,.08);
+  }
+  .btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+  .btn-primary{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:#fff}
+  .btn-ghost{background:#f1f5f9;color:#0f172a}
+  .btn-danger{background:linear-gradient(90deg,#ef4444,#991b1b);color:#fff}
+  .btn-outline{background:#fff;border:1.5px solid var(--border);color:#0f172a;}
+  .btn-sm{padding:7px 10px; border-radius:8px; font-size:.9rem;}
+  .card{background:var(--card); border-radius:14px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.08)}
+  .grid{display:grid;gap:10px; grid-template-columns:1fr 1fr}
+  .grid .full{grid-column:1/-1}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .label{font-weight:700;color:#334155}
+  .value{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;color:#0f172a}
+  .copy{cursor:pointer}
+  .copy.copied{background:#ecfdf5;border-color:#10b981;color:#065f46}
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;border:1px solid #e2e8f0;background:#fff}
+  .timeline{display:flex;flex-direction:column;gap:12px}
+  .item{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+  .dot{width:12px;height:12px;border-radius:999px;background:#cbd5e1;margin-top:8px}
+  .item-head{display:flex;gap:8px;align-items:center}
+  .item-meta{color:#64748b;font-size:.9rem}
+  .textarea{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px}
+  @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
+</style>
+
+<div class="topbar">
+  <div class="page">
+    <div class="toprow">
+      <a class="back" href="{% url 'procesos:carpeta_detalle' proceso.carpeta_id %}">
+        <i class="fa-solid fa-arrow-left"></i> Volver a la carpeta
+      </a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="btn btn-outline" href="{% url 'procesos:proceso_editar' proceso.id %}">
+          <i class="fa-solid fa-pen-to-square"></i> Editar
+        </a>
+        <form action="{% url 'procesos:proceso_eliminar' proceso.id %}" method="post"
+              onsubmit="return confirm('¿Eliminar el proceso \"{{ proceso.nombre|escapejs }}\"?');" style="display:inline;">
+          {% csrf_token %}
+          <button class="btn btn-danger" type="submit"><i class="fa-solid fa-trash"></i> Eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Datos del proceso -->
+  <div class="card" style="margin-bottom:12px;">
+    <h2 style="margin:0 0 8px 0;">{{ proceso.nombre }}</h2>
+    <div class="grid">
+      <div class="field">
+        <div class="label">N° de proceso</div>
+        <div class="value copy" id="num-proc">
+          {% if proceso.numero_proceso %}{{ proceso.numero_proceso }}{% else %}<span style="color:#94a3b8">—</span>{% endif %}
+        </div>
+      </div>
+      <div class="field">
+        <div class="label">Estado</div>
+        <div class="value"><span class="badge">{{ proceso.get_estado_display }}</span></div>
+      </div>
+      <div class="field">
+        <div class="label">Ciudad</div>
+        <div class="value">{% if proceso.ciudad %}{{ proceso.ciudad }}{% else %}<span style="color:#94a3b8">—</span>{% endif %}</div>
+      </div>
+      <div class="field">
+        <div class="label">Fecha de revisión</div>
+        <div class="value">{% if proceso.fecha_revision %}{{ proceso.fecha_revision|date:"Y-m-d" }}{% else %}<span style="color:#94a3b8">—</span>{% endif %}</div>
+      </div>
+      <div class="field">
+        <div class="label">Creado por</div>
+        <div class="value">{% if proceso.creado_por %}{{ proceso.creado_por.get_full_name|default:proceso.creado_por.username }}{% else %}<span style="color:#94a3b8">—</span>{% endif %}</div>
+      </div>
+      <div class="field">
+        <div class="label">Creado / Actualizado</div>
+        <div class="value">
+          {{ proceso.creado_en|date:"Y-m-d H:i" }}<br>
+          <span class="item-meta">Act: {{ proceso.actualizado_en|date:"Y-m-d H:i" }}</span>
+        </div>
+      </div>
+      {% if proceso.observacion %}
+      <div class="field full">
+        <div class="label">Observación (campo del proceso)</div>
+        <div class="value">{{ proceso.observacion|linebreaksbr }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Observaciones (historial) -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
+      <h3 style="margin:0;">Observaciones</h3>
+      <span class="item-meta">{{ observaciones|length }} registro{{ observaciones|length|pluralize }}</span>
+    </div>
+
+    {% if observaciones %}
+      <div class="timeline">
+        {% for o in observaciones %}
+          <div class="item">
+            <div class="dot"></div>
+            <div>
+              <div class="item-head">
+                <strong>{{ o.creado_por.get_full_name|default:o.creado_por.username|default:"—" }}</strong>
+                <span class="item-meta">· {{ o.creado_en|date:"Y-m-d H:i" }}</span>
+              </div>
+              <div style="margin-top:6px;white-space:pre-wrap;">{{ o.texto }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="color:#64748b;">Sin observaciones.</div>
+    {% endif %}
+  </div>
+
+  <!-- Form agregar observación -->
+  <div class="card">
+    <h3 style="margin:0 0 8px 0;">Agregar observación</h3>
+    <form action="{% url 'procesos:agregar_observacion' proceso.id %}" method="post">
+      {% csrf_token %}
+      {{ form_obs.non_field_errors }}
+      <div class="field">
+        <label class="label" for="{{ form_obs.texto.id_for_label }}">Texto</label>
+        {{ form_obs.texto.errors }}
+        {{ form_obs.texto }}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+        <a class="btn btn-ghost" href="{% url 'procesos:carpeta_detalle' proceso.carpeta_id %}">
+        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Copiar N° de proceso
+  const num = document.getElementById('num-proc');
+  if (num && num.textContent.trim() && num.textContent.trim() !== '—'){
+    num.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(num.textContent.trim());
+        num.classList.add('copy','copied');
+        setTimeout(()=>num.classList.remove('copied'), 900);
+      }catch(_){}
+    });
+  }
+</script>
+{% endblock %}
